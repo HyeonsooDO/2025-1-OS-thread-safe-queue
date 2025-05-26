@@ -87,10 +87,29 @@ Queue* range(Queue* queue, Key start, Key end) {
 	if (!new_q) return nullptr;
 
 	Node* curr = queue->head;
+
 	while (curr) {
-		if (start <= curr->item.key && curr->item.key <= end) {
-			enqueue(new_q, curr->item);
+		if (curr->item.key < start) {
+			curr = curr->next;
+			continue;
 		}
+
+		if (curr->item.key > end) break;
+
+		Node* clone = nclone(curr);
+		if (!clone) {
+			release(new_q);
+			return nullptr;
+		}
+
+		if (!new_q->head) {
+			new_q->head = new_q->tail = clone;
+		}
+		else {
+			new_q->tail->next = clone;
+			new_q->tail = clone;
+		}
+
 		curr = curr->next;
 	}
 
