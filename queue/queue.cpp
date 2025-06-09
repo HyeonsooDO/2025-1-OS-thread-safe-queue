@@ -54,11 +54,8 @@ Node* nclone(Node* node) {
 
 Reply enqueue(Queue* queue, Item item) {
 	Node* new_node = nalloc(item);
+	if (!new_node) return { false, item };
 	queue->lock.lock();
-	if (!new_node) {
-		queue->lock.unlock();
-		return { false, item };
-	}
 
 	if (!queue->head) {
 		queue->head = queue->tail = new_node;
@@ -73,6 +70,19 @@ Reply enqueue(Queue* queue, Item item) {
 		curr = curr->next;
 	}
 
+	if (curr && curr->item.key == item.key) {
+		if (!item.value || item.value_size <= 0) {
+			queue->lock.unlock();
+			return { false, item };
+		}
+		free(curr->item.value);
+		curr->item.value = malloc(item.value_size);
+		memcpy(curr->item.value, item.value, item.value_size);
+		curr->item.value_size = item.value_size;
+		queue->lock.unlock();
+		return { true, curr->item };
+	}
+	
 	if (!prev) {
 		new_node->next = queue->head;
 		queue->head = new_node;
