@@ -53,11 +53,16 @@ Node* nclone(Node* node) {
 
 
 Reply enqueue(Queue* queue, Item item) {
+	queue->lock.lock();
 	Node* new_node = nalloc(item);
-	if (!new_node) return { false, item };
+	if (!new_node) {
+		queue->lock.unlock();
+		return { false, item };
+	}
 
 	if (!queue->head) {
 		queue->head = queue->tail = new_node;
+		queue->lock.unlock();
 		return { true, item };
 	}
 
@@ -78,11 +83,16 @@ Reply enqueue(Queue* queue, Item item) {
 	}
 
 	if (!curr) queue->tail = new_node;
+	queue->lock.unlock();
 	return { true, item };
 }
 
 Reply dequeue(Queue* queue) {
-	if (!queue->head) return { false, {} };
+	queue->lock.lock();
+	if (!queue->head) {
+		queue->lock.unlock();
+		return { false, {} };
+	}
 
 	Node* node = queue->head;
 	queue->head = node->next;
@@ -90,10 +100,12 @@ Reply dequeue(Queue* queue) {
 
 	Item item = node->item;
 	nfree(node);
+	queue->lock.unlock();
 	return { true, item };
 }
 
 Queue* range(Queue* queue, Key start, Key end) {
+	queue->lock.lock();
 	Queue* new_q = init();
 	if (!new_q) return nullptr;
 
@@ -110,6 +122,7 @@ Queue* range(Queue* queue, Key start, Key end) {
 		Node* clone = nclone(curr);
 		if (!clone) {
 			release(new_q);
+			queue->lock.unlock();
 			return nullptr;
 		}
 
@@ -123,6 +136,6 @@ Queue* range(Queue* queue, Key start, Key end) {
 
 		curr = curr->next;
 	}
-
+	queue->lock.unlock();
 	return new_q;
 }
