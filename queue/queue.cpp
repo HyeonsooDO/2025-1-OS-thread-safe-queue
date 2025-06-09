@@ -24,13 +24,24 @@ void release(Queue* queue) {
 
 Node* nalloc(Item item) {
 	Node* node = new Node;
-	node->item = item;
+	node->item.key = item.key;
+	node->item.value_size = item.value_size;
+
+	if (item.value_size > 0 && item.value) {
+		node->item.value = malloc(item.value_size);
+		memcpy(node->item.value, item.value, item.value_size);
+	}
+	else {
+		node->item.value = nullptr;
+	}
 	node->next = nullptr;
 	return node;
 }
 
-
 void nfree(Node* node) {
+	if (node->item.value) {
+		free(node->item.value);
+	}
 	delete node;
 }
 
