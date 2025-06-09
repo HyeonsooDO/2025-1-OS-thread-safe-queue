@@ -1,4 +1,5 @@
 #include <atomic>
+#include <thread>
 #ifndef _QTYPE_H  // header guard
 #define _QTYPE_H
 

@@ -53,8 +53,8 @@ Node* nclone(Node* node) {
 
 
 Reply enqueue(Queue* queue, Item item) {
-	queue->lock.lock();
 	Node* new_node = nalloc(item);
+	queue->lock.lock();
 	if (!new_node) {
 		queue->lock.unlock();
 		return { false, item };
